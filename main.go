@@ -6,6 +6,11 @@ import (
 )
 
 func main() {
+	fmt.Println("Loading Wad ...")
 	engine.LoadWadFile("resources/doom1.wad")
-	fmt.Println(engine.ReadLumpData("E1M1"))
+	things := engine.ReadMapData("E1M1")
+	for index, thing := range things.Things {
+		fmt.Println(fmt.Sprintf("%d x: %d y: %d, dir: %d, type: %d, flags: %d", index, thing.XPosition, thing.YPosition, thing.Direction, thing.ThingType, thing.Flags))
+
+	}
 }
