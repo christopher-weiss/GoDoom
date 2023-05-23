@@ -14,14 +14,34 @@ var directories = make(map[string]Directory)
 var directory = make(map[int]Directory)
 var directoryIndex = make(map[string]int)
 
+// Index offsets between Map-marker and Map-objects
+const (
+	ThingsOffset   int = 1
+	LineDefsOffset int = 2
+	SideDefsOffset int = 3
+	VertexesOffset int = 4
+	SegsOffset     int = 5
+	SSectorsOffset int = 6
+	NodesOffset    int = 7
+	SectorsOffset  int = 8
+	RejectOffset   int = 9
+	BlockmapOffset int = 10
+)
+
+// Block sizes
+const (
+	ThingsBlockSize    int32 = 10
+	DirectoryBlockSize int32 = 16
+)
+
 type WadHeader struct {
 	// 4 character identification, either 'IWAD' or 'PWAD'
 	identification string
 
-	// integer specifying the number of lumps (files) in the WAD
+	// Integer specifying the number of lumps (files) in the WAD
 	numLumps int32
 
-	// integer holding a pointer to the location of the directory.
+	// Integer holding a pointer to the location of the directory.
 	offFat int32
 }
 
@@ -37,7 +57,9 @@ type Directory struct {
 }
 
 type Map struct {
-	name   string
+	// Map name
+	name string
+	// Things (see: https://doomwiki.org/wiki/Thing)
 	Things []Things
 }
 
@@ -65,13 +87,13 @@ func LoadWadFile(path string) {
 	// Directories
 	index := wadHeader.offFat
 	i := 0
-	for index+16 < int32(len(wad)) {
+	for index+DirectoryBlockSize < int32(len(wad)) {
 		name := string(bytes.Trim(wad[index+8:index+16], "\x00")) // trim null-terminated strings
 		directories[name] = Directory{filepos: readInt32(wad[index : index+4]), size: readInt32(wad[index+4 : index+8]), name: name}
 		directoryIndex[name] = i
 		directory[i] = directories[name]
 		i++
-		index += 16
+		index += DirectoryBlockSize
 	}
 
 	lumpData = wad[0:wadHeader.offFat]
@@ -101,28 +123,29 @@ func ReadDirectoryForLumpIndex(index int) Directory {
 	return directory[index]
 }
 
-func ReadMapData(name string) Map {
-	lumpIndex := readLumpIndexForName(name)
-	thingsIndex := lumpIndex + 1
-	thingsDirectory := ReadDirectoryForLumpIndex(thingsIndex)
+func ReadMapData(mapName string) Map {
+	lumpIndex := readLumpIndexForName(mapName)
+	thingsDirectory := ReadDirectoryForLumpIndex(lumpIndex + ThingsOffset)
 	thingsLumpData := ReadLumpData(thingsDirectory)
+
 	var things []Things
-	for offset := int32(0); offset < thingsDirectory.size; offset += 10 {
+	for entryOffset := int32(0); entryOffset < thingsDirectory.size; entryOffset += ThingsBlockSize {
 		things = append(things, Things{
-			XPosition: readInt16(thingsLumpData[0+offset : 2+offset]),
-			YPosition: readInt16(thingsLumpData[2+offset : 4+offset]),
-			Direction: readInt16(thingsLumpData[4+offset : 6+offset]),
-			ThingType: readInt16(thingsLumpData[6+offset : 8+offset]),
-			Flags:     readInt16(thingsLumpData[8+offset : 10+offset]),
+			XPosition: readInt16(thingsLumpData[0+entryOffset : 2+entryOffset]),
+			YPosition: readInt16(thingsLumpData[2+entryOffset : 4+entryOffset]),
+			Direction: readInt16(thingsLumpData[4+entryOffset : 6+entryOffset]),
+			ThingType: readInt16(thingsLumpData[6+entryOffset : 8+entryOffset]),
+			Flags:     readInt16(thingsLumpData[8+entryOffset : 10+entryOffset]),
 		})
 	}
+
 	return Map{
+		name:   mapName,
 		Things: things,
 	}
 }
 
 func ReadLumpData(directory Directory) []byte {
-	fmt.Println(directory)
 	return lumpData[directory.filepos : directory.filepos+directory.size]
 }
 
