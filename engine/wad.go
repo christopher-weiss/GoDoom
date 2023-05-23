@@ -32,43 +32,52 @@ const (
 const (
 	ThingsBlockSize    int32 = 10
 	DirectoryBlockSize int32 = 16
+	VertexesBlockSize  int32 = 4
+	LinedefsBlockSize  int32 = 14
 )
 
 type WadHeader struct {
-	// 4 character identification, either 'IWAD' or 'PWAD'
 	identification string
-
-	// Integer specifying the number of lumps (files) in the WAD
-	numLumps int32
-
-	// Integer holding a pointer to the location of the directory.
-	offFat int32
+	numLumps       int32
+	offFat         int32
 }
 
 type Directory struct {
-	// An integer holding a pointer to the start of the lump's data in the file
 	filepos int32
-
-	// An integer representing the size of the lump in bytes
-	size int32
-
-	// A string defining the lump's name
-	name string
+	size    int32
+	name    string
 }
 
 type Map struct {
-	// Map name
-	name string
-	// Things (see: https://doomwiki.org/wiki/Thing)
-	Things []Things
+	// Map Name
+	Name     string
+	Things   []Thing
+	Vertexes []Vertex
+	Linedefs []Linedef
 }
 
-type Things struct {
+// Thing (see: https://doomwiki.org/wiki/Thing)
+type Thing struct {
 	XPosition int16
 	YPosition int16
 	Direction int16
 	ThingType int16
 	Flags     int16
+}
+
+type Vertex struct {
+	XPosition int16
+	YPosition int16
+}
+
+type Linedef struct {
+	StartVertex  int16
+	EndVertex    int16
+	Flags        int16
+	SpecialType  int16
+	SectorTag    int16
+	FrontSideDef int16
+	BackSideDef  int16
 }
 
 func LoadWadFile(path string) {
@@ -128,9 +137,10 @@ func ReadMapData(mapName string) Map {
 	thingsDirectory := ReadDirectoryForLumpIndex(lumpIndex + ThingsOffset)
 	thingsLumpData := ReadLumpData(thingsDirectory)
 
-	var things []Things
+	// Thing
+	var things []Thing
 	for entryOffset := int32(0); entryOffset < thingsDirectory.size; entryOffset += ThingsBlockSize {
-		things = append(things, Things{
+		things = append(things, Thing{
 			XPosition: readInt16(thingsLumpData[0+entryOffset : 2+entryOffset]),
 			YPosition: readInt16(thingsLumpData[2+entryOffset : 4+entryOffset]),
 			Direction: readInt16(thingsLumpData[4+entryOffset : 6+entryOffset]),
@@ -139,9 +149,38 @@ func ReadMapData(mapName string) Map {
 		})
 	}
 
+	// Vertexes
+	vertexesDirectory := ReadDirectoryForLumpIndex(lumpIndex + VertexesOffset)
+	vertexesLumpData := ReadLumpData(vertexesDirectory)
+	var vertexes []Vertex
+	for entryOffset := int32(0); entryOffset < vertexesDirectory.size; entryOffset += VertexesBlockSize {
+		vertexes = append(vertexes, Vertex{
+			XPosition: readInt16(vertexesLumpData[0+entryOffset : 2+entryOffset]),
+			YPosition: readInt16(vertexesLumpData[2+entryOffset : 4+entryOffset]),
+		})
+	}
+
+	// Linedefs
+	linedefsDirectory := ReadDirectoryForLumpIndex(lumpIndex + LineDefsOffset)
+	linedefsLumpData := ReadLumpData(linedefsDirectory)
+	var linedefs []Linedef
+	for entryOffset := int32(0); entryOffset < linedefsDirectory.size; entryOffset += LinedefsBlockSize {
+		linedefs = append(linedefs, Linedef{
+			StartVertex:  readInt16(linedefsLumpData[0+entryOffset : 2+entryOffset]),
+			EndVertex:    readInt16(linedefsLumpData[2+entryOffset : 4+entryOffset]),
+			Flags:        readInt16(linedefsLumpData[4+entryOffset : 6+entryOffset]),
+			SpecialType:  readInt16(linedefsLumpData[6+entryOffset : 8+entryOffset]),
+			SectorTag:    readInt16(linedefsLumpData[8+entryOffset : 10+entryOffset]),
+			FrontSideDef: readInt16(linedefsLumpData[10+entryOffset : 12+entryOffset]),
+			BackSideDef:  readInt16(linedefsLumpData[12+entryOffset : 14+entryOffset]),
+		})
+	}
+
 	return Map{
-		name:   mapName,
-		Things: things,
+		Name:     mapName,
+		Things:   things,
+		Vertexes: vertexes,
+		Linedefs: linedefs,
 	}
 }
 
