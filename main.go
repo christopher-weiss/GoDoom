@@ -14,20 +14,21 @@ const (
 	ScreenHeight int = 480
 )
 
-var things []engine.Thing
-var vertexes []engine.Vertex
-var linedefs []engine.Linedef
 var xOff int16 = 0
 var yOff int16 = 0
+var mapData = make(map[string]engine.Map)
+var currentMap engine.Map
 
 func main() {
 	engine.LoadWadFile("resources/doom1.wad")
-	mapData := engine.ReadMapData("E1M1")
-	things = mapData.Things
-	vertexes = mapData.Vertexes
-	linedefs = mapData.Linedefs
+	mapName := "E1M1"
+	for level := 1; level <= 6; level++ {
+		levelName := fmt.Sprintf("E1M%d", level)
+		mapData[levelName] = engine.ReadMapData(levelName)
+	}
+	currentMap = mapData["E1M1"]
 
-	for index, thing := range things {
+	for index, thing := range mapData[mapName].Things {
 		fmt.Println(fmt.Sprintf("%d x: %d y: %d, dir: %d, type: %d, flags: %d", index, thing.XPosition, thing.YPosition, thing.Direction, thing.ThingType, thing.Flags))
 	}
 
@@ -37,40 +38,56 @@ func main() {
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 type Game struct{}
 
 func (g *Game) Update() error {
+	if ebiten.IsKeyPressed(ebiten.Key1) {
+		currentMap = mapData["E1M1"]
+	}
+	if ebiten.IsKeyPressed(ebiten.Key2) {
+		currentMap = mapData["E1M2"]
+	}
+	if ebiten.IsKeyPressed(ebiten.Key3) {
+		currentMap = mapData["E1M3"]
+	}
+	if ebiten.IsKeyPressed(ebiten.Key4) {
+		currentMap = mapData["E1M4"]
+	}
+	if ebiten.IsKeyPressed(ebiten.Key5) {
+		currentMap = mapData["E1M5"]
+	}
+	if ebiten.IsKeyPressed(ebiten.Key6) {
+		currentMap = mapData["E1M6"]
+	}
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		yOff = yOff + 2
+		yOff = yOff + 4
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		yOff = yOff - 2
+		yOff = yOff - 4
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		xOff = xOff - 2
+		xOff = xOff - 4
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		xOff = xOff + 2
+		xOff = xOff + 4
 	}
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	//ebitenutil.DebugPrint(screen, "Loading WAD file ...")
-	for _, thing := range things {
+	for _, thing := range currentMap.Things {
 		x := (thing.XPosition / 10) + xOff
 		y := -((thing.YPosition / 10) + yOff)
 		vector.DrawFilledCircle(screen, float32(x), float32(y), 2.0, color.RGBA{R: 128, G: 128, B: 128, A: 128}, true)
 	}
 
-	for _, linedef := range linedefs {
-		x1 := (vertexes[linedef.StartVertex].XPosition / 10) + xOff
-		y1 := -((vertexes[linedef.StartVertex].YPosition / 10) + yOff)
-		x2 := (vertexes[linedef.EndVertex].XPosition / 10) + xOff
-		y2 := -((vertexes[linedef.EndVertex].YPosition / 10) + yOff)
+	for _, linedef := range currentMap.Linedefs {
+		x1 := (currentMap.Vertexes[linedef.StartVertex].XPosition / 10) + xOff
+		y1 := -((currentMap.Vertexes[linedef.StartVertex].YPosition / 10) + yOff)
+		x2 := (currentMap.Vertexes[linedef.EndVertex].XPosition / 10) + xOff
+		y2 := -((currentMap.Vertexes[linedef.EndVertex].YPosition / 10) + yOff)
 		vector.StrokeLine(screen, float32(x1), float32(y1), float32(x2), float32(y2), 2.0, color.RGBA{R: 128, G: 128, B: 128, A: 128}, true)
 	}
 }
