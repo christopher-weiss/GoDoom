@@ -15,6 +15,15 @@ var currentMap engine.Map
 func main() {
 	initializeGame()
 
+	bTree := engine.NodeDemo{Value: 0}
+	bTree.Insert(-15)
+	bTree.Insert(-8)
+	bTree.Insert(6)
+	bTree.Insert(12)
+	bTree.Insert(20)
+
+	bTree.Traverse(4)
+
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}
@@ -27,7 +36,7 @@ func initializeGame() {
 	engine.LoadWadFile("resources/doom1.wad")
 	startingMap := "E1M1"
 
-	for level := 1; level <= 6; level++ {
+	for level := 1; level <= 8; level++ {
 		levelName := fmt.Sprintf("E1M%d", level)
 		mapData[levelName] = engine.ReadMapData(levelName)
 	}
@@ -54,6 +63,12 @@ func (g *Game) Update() error {
 	if ebiten.IsKeyPressed(ebiten.Key6) {
 		currentMap = mapData["E1M6"]
 	}
+	if ebiten.IsKeyPressed(ebiten.Key7) {
+		currentMap = mapData["E1M7"]
+	}
+	if ebiten.IsKeyPressed(ebiten.Key8) {
+		currentMap = mapData["E1M8"]
+	}
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		engine.YOffset = engine.YOffset - 4
 	}
@@ -65,6 +80,14 @@ func (g *Game) Update() error {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		engine.XOffset = engine.XOffset - 4
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyEqual) {
+		if engine.ScalingFactor > 1 {
+			engine.ScalingFactor = engine.ScalingFactor - 1
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyMinus) {
+		engine.ScalingFactor = engine.ScalingFactor + 1
 	}
 	return nil
 }

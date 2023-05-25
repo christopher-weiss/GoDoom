@@ -16,24 +16,28 @@ var directoryIndex = make(map[string]int)
 
 // Index offsets between Map-marker and Map-objects
 const (
-	ThingsOffset   int = 1
-	LineDefsOffset int = 2
-	SideDefsOffset int = 3
-	VertexesOffset int = 4
-	SegsOffset     int = 5
-	SSectorsOffset int = 6
-	NodesOffset    int = 7
-	SectorsOffset  int = 8
-	RejectOffset   int = 9
-	BlockmapOffset int = 10
+	ThingsOffset    int = 1
+	LineDefsOffset  int = 2
+	SideDefsOffset  int = 3
+	VertexesOffset  int = 4
+	SegsOffset      int = 5
+	SubSectorOffset int = 6
+	NodesOffset     int = 7
+	SectorsOffset   int = 8
+	RejectOffset    int = 9
+	BlockmapOffset  int = 10
 )
 
-// Block sizes
+// Block sizes (in bytes)
 const (
 	ThingsBlockSize    int32 = 10
 	DirectoryBlockSize int32 = 16
 	VertexesBlockSize  int32 = 4
 	LinedefsBlockSize  int32 = 14
+	SegsBlockSize      int32 = 12
+	SubSectorBlockSize int32 = 4
+	NodeBlockSize      int32 = 28
+	SectorBlockSize    int32 = 24
 )
 
 type WadHeader struct {
@@ -50,10 +54,14 @@ type Directory struct {
 
 type Map struct {
 	// Map Name
-	Name     string
-	Things   []Thing
-	Vertexes []Vertex
-	Linedefs []Linedef
+	Name       string
+	Things     []Thing
+	Linedefs   []Linedef
+	Vertexes   []Vertex
+	Segs       []Seg
+	SubSectors []SubSector
+	Nodes      []Node
+	Sectors    []Sector
 }
 
 // Thing (see: https://doomwiki.org/wiki/Thing)
@@ -149,17 +157,6 @@ func ReadMapData(mapName string) Map {
 		})
 	}
 
-	// Vertexes
-	vertexesDirectory := ReadDirectoryForLumpIndex(lumpIndex + VertexesOffset)
-	vertexesLumpData := ReadLumpData(vertexesDirectory)
-	var vertexes []Vertex
-	for entryOffset := int32(0); entryOffset < vertexesDirectory.size; entryOffset += VertexesBlockSize {
-		vertexes = append(vertexes, Vertex{
-			XPosition: readInt16(vertexesLumpData[0+entryOffset : 2+entryOffset]),
-			YPosition: readInt16(vertexesLumpData[2+entryOffset : 4+entryOffset]),
-		})
-	}
-
 	// Linedefs
 	linedefsDirectory := ReadDirectoryForLumpIndex(lumpIndex + LineDefsOffset)
 	linedefsLumpData := ReadLumpData(linedefsDirectory)
@@ -176,11 +173,84 @@ func ReadMapData(mapName string) Map {
 		})
 	}
 
+	// Vertexes
+	vertexesDirectory := ReadDirectoryForLumpIndex(lumpIndex + VertexesOffset)
+	vertexesLumpData := ReadLumpData(vertexesDirectory)
+	var vertexes []Vertex
+	for entryOffset := int32(0); entryOffset < vertexesDirectory.size; entryOffset += VertexesBlockSize {
+		vertexes = append(vertexes, Vertex{
+			XPosition: readInt16(vertexesLumpData[0+entryOffset : 2+entryOffset]),
+			YPosition: readInt16(vertexesLumpData[2+entryOffset : 4+entryOffset]),
+		})
+	}
+
+	// Segs
+	var segs []Seg
+	segsDirectory := ReadDirectoryForLumpIndex(lumpIndex + SegsOffset)
+	segsLumpData := ReadLumpData(segsDirectory)
+	for entryOffset := int32(0); entryOffset < segsDirectory.size; entryOffset += SegsBlockSize {
+		segs = append(segs, Seg{
+			startingVertexNumber: readInt16(segsLumpData[0+entryOffset : 2+entryOffset]),
+			endingVertexNumber:   readInt16(segsLumpData[2+entryOffset : 4+entryOffset]),
+			angle:                readInt16(segsLumpData[4+entryOffset : 6+entryOffset]),
+			lineDefNumber:        readInt16(segsLumpData[6+entryOffset : 8+entryOffset]),
+			direction:            readInt16(segsLumpData[8+entryOffset : 10+entryOffset]),
+			offset:               readInt16(segsLumpData[10+entryOffset : 12+entryOffset]),
+		})
+	}
+
+	// SubSectors
+	var subSectors []SubSector
+	subSectorDirectory := ReadDirectoryForLumpIndex(lumpIndex + SubSectorOffset)
+	subSectorLumpData := ReadLumpData(subSectorDirectory)
+	for entryOffset := int32(0); entryOffset < subSectorDirectory.size; entryOffset += SubSectorBlockSize {
+		subSectors = append(subSectors, SubSector{
+			segCount:       readInt16(subSectorLumpData[0+entryOffset : 2+entryOffset]),
+			firstSegNumber: readInt16(subSectorLumpData[2+entryOffset : 4+entryOffset]),
+		})
+	}
+
+	// Nodes
+	var nodes []Node
+	nodeDirectory := ReadDirectoryForLumpIndex(lumpIndex + NodesOffset)
+	nodeLumpData := ReadLumpData(nodeDirectory)
+	for entryOffset := int32(0); entryOffset < nodeDirectory.size; entryOffset += NodeBlockSize {
+		nodes = append(nodes, Node{
+			partitionLineX:   readInt16(nodeLumpData[0+entryOffset : 2+entryOffset]),
+			partitionLineY:   readInt16(nodeLumpData[2+entryOffset : 4+entryOffset]),
+			dxPartitionLineX: readInt16(nodeLumpData[4+entryOffset : 6+entryOffset]),
+			dyPartitionLineY: readInt16(nodeLumpData[6+entryOffset : 8+entryOffset]),
+			rightBoundingBox: readInt64(nodeLumpData[8+entryOffset : 16+entryOffset]),
+			leftBoundingBox:  readInt64(nodeLumpData[16+entryOffset : 24+entryOffset]),
+			rightChild:       readInt16(nodeLumpData[24+entryOffset : 26+entryOffset]),
+			leftChild:        readInt16(nodeLumpData[26+entryOffset : 28+entryOffset]),
+		})
+	}
+
+	// Sectors
+	var sectors []Sector
+	sectorDirectory := ReadDirectoryForLumpIndex(lumpIndex + SectorsOffset)
+	sectorLumpData := ReadLumpData(sectorDirectory)
+	for entryOffset := int32(0); entryOffset < sectorDirectory.size; entryOffset += SectorBlockSize {
+		sectors = append(sectors, Sector{
+			floorHeight:          readInt16(sectorLumpData[0+entryOffset : 2+entryOffset]),
+			ceilingHeight:        readInt16(sectorLumpData[2+entryOffset : 4+entryOffset]),
+			nameOfFloorTexture:   readString(sectorLumpData[4+entryOffset : 12+entryOffset]),
+			nameOfCeilingTexture: readString(sectorLumpData[12+entryOffset : 20+entryOffset]),
+			lightLevel:           readInt16(sectorLumpData[20+entryOffset : 22+entryOffset]),
+			sectorType:           readInt16(sectorLumpData[22+entryOffset : 24+entryOffset]),
+			tagNumber:            readInt16(sectorLumpData[24+entryOffset : 26+entryOffset]),
+		})
+	}
+
 	return Map{
-		Name:     mapName,
-		Things:   things,
-		Vertexes: vertexes,
-		Linedefs: linedefs,
+		Name:       mapName,
+		Things:     things,
+		Vertexes:   vertexes,
+		Linedefs:   linedefs,
+		Segs:       segs,
+		SubSectors: subSectors,
+		Nodes:      nodes,
 	}
 }
 
@@ -195,6 +265,18 @@ func readInt16(data []byte) (ret int16) {
 }
 
 func readInt32(data []byte) (ret int32) {
+	buf := bytes.NewBuffer(data)
+	binary.Read(buf, binary.LittleEndian, &ret)
+	return
+}
+
+func readInt64(data []byte) (ret int64) {
+	buf := bytes.NewBuffer(data)
+	binary.Read(buf, binary.LittleEndian, &ret)
+	return
+}
+
+func readString(data []byte) (ret string) {
 	buf := bytes.NewBuffer(data)
 	binary.Read(buf, binary.LittleEndian, &ret)
 	return
