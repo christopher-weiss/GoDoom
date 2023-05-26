@@ -1,6 +1,5 @@
 package engine
 
 // only for testing
-var XOffset int16 = 0
-var YOffset int16 = 0
-var ScalingFactor int16 = 10
+var PlayerOffsetX float32 = 0
+var PlayerOffsetY float32 = 0
