@@ -41,6 +41,13 @@ func DrawMap(screen *ebiten.Image, currentMap *Map) {
 		y2 := remapY(currentMap.Vertexes[linedef.EndVertex].YPosition, offsetY)
 		vector.StrokeLine(screen, x1, y1, x2, y2, 2.0, color.RGBA{R: 128, G: 128, B: 128, A: 128}, true)
 	}
+
+	// debug
+	for _, node := range currentMap.Nodes {
+		//if i == len(currentMap.Nodes)-1 {
+		DrawBoundingBoxes(screen, node, offsetX, offsetY)
+		//}
+	}
 }
 
 // Remap WAD X-coordinate match resolution and make more of the map visible
@@ -56,4 +63,31 @@ func remapY(y int16, offset float32) float32 {
 
 func CalculateOffset(x int16, y int16) (float32, float32) {
 	return float32(ScreenCenterX) - float32(x*int16(ScaleFactor)/20) + PlayerOffsetX, -(float32(ScreenCenterY) - float32(-y*int16(ScaleFactor)/20)) + PlayerOffsetY
+}
+
+// DrawNode Only for debugging
+func DrawNode(node Node) {
+
+}
+
+func DrawBoundingBoxes(screen *ebiten.Image, node Node, offsetX float32, offsetY float32) {
+	leftBoundingBoxRight := remapX(int16((node.leftBoundingBox>>48)&0xffff), offsetX)
+	leftBoundingBoxLeft := remapX(int16((node.leftBoundingBox>>32)&0xffff), offsetX)
+	leftBoundingBoxBottom := remapY(int16((node.leftBoundingBox>>16)&0xffff), offsetY)
+	leftBoundingBoxTop := remapY(int16(node.leftBoundingBox&0xffff), offsetY)
+	vector.StrokeRect(screen, leftBoundingBoxLeft, leftBoundingBoxBottom, leftBoundingBoxRight-leftBoundingBoxLeft, leftBoundingBoxTop-leftBoundingBoxBottom, 1.0, color.RGBA{R: 128, A: 128}, true)
+
+	rightBoundingBoxRight := remapX(int16((node.rightBoundingBox>>48)&0xffff), offsetX)
+	rightBoundingBoxLeft := remapX(int16((node.rightBoundingBox>>32)&0xffff), offsetX)
+	rightBoundingBoxBottom := remapY(int16((node.rightBoundingBox>>16)&0xffff), offsetY)
+	rightBoundingBoxTop := remapY(int16(node.rightBoundingBox&0xffff), offsetY)
+	vector.StrokeRect(screen, rightBoundingBoxLeft, rightBoundingBoxBottom, rightBoundingBoxRight-rightBoundingBoxLeft, rightBoundingBoxTop-rightBoundingBoxBottom, 1.0, color.RGBA{G: 128, A: 128}, true)
+}
+
+func highByte(rVal int64) uint8 {
+	return uint8(rVal >> 8)
+}
+
+func lowByte(rVal uint16) uint8 {
+	return uint8(rVal & 0xff)
 }

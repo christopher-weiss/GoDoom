@@ -76,3 +76,7 @@ func (n *NodeDemo) Traverse(playerPosition int) {
 		}
 	}
 }
+
+func GetRootNode(nodes []Node) Node {
+	return nodes[len(nodes)-1]
+}
