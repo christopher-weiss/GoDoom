@@ -33,7 +33,6 @@ func initializeGame() {
 	}
 
 	currentMap = mapData[startingMap]
-
 }
 
 func (g *Game) Update() error {
@@ -88,6 +87,10 @@ func (g *Game) Update() error {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		engine.PlayerOffsetX = engine.PlayerOffsetX - float32(1)
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyB) {
+		engine.DrawBoundingBoxesInMap = !engine.DrawBoundingBoxesInMap
 	}
 	return nil
 }
