@@ -128,10 +128,6 @@ func LoadWadFile(path string) {
 	}
 }
 
-func ReadHeader() WadHeader {
-	return wadHeader
-}
-
 func readLumpIndexForName(name string) int {
 	return directoryIndex[name]
 }
@@ -214,8 +210,10 @@ func ReadMapData(mapName string) Map {
 	var nodes []Node
 	nodeDirectory := ReadDirectoryForLumpIndex(lumpIndex + NodesOffset)
 	nodeLumpData := ReadLumpData(nodeDirectory)
+	index := int16(0)
 	for entryOffset := int32(0); entryOffset < nodeDirectory.size; entryOffset += NodeBlockSize {
 		nodes = append(nodes, Node{
+			id:               index,
 			partitionLineX:   readInt16(nodeLumpData[0+entryOffset : 2+entryOffset]),
 			partitionLineY:   readInt16(nodeLumpData[2+entryOffset : 4+entryOffset]),
 			dxPartitionLineX: readInt16(nodeLumpData[4+entryOffset : 6+entryOffset]),
@@ -225,6 +223,7 @@ func ReadMapData(mapName string) Map {
 			rightChild:       readInt16(nodeLumpData[24+entryOffset : 26+entryOffset]),
 			leftChild:        readInt16(nodeLumpData[26+entryOffset : 28+entryOffset]),
 		})
+		index += 1
 	}
 
 	// Sectors
