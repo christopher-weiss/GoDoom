@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"image/color"
@@ -49,6 +50,8 @@ func DrawMap(screen *ebiten.Image, currentMap *Map) {
 			DrawBoundingBoxes(screen, node, offsetX, offsetY)
 		}
 	}
+
+	fmt.Printf("is left of splitter: %b\n", IsPlayerLeftOfSplitter(800, 500, currentMap.Nodes[len(currentMap.Nodes)-1], offsetX, offsetY))
 }
 
 // Remap WAD X-coordinate match resolution and make more of the map visible
@@ -90,6 +93,14 @@ func DrawBoundingBoxes(screen *ebiten.Image, node Node, offsetX float32, offsetY
 	vector.StrokeLine(screen, splitterX1, splitterY1, splitterX2, splitterY2, 1, color.RGBA{B: 128, A: 128}, true)
 }
 
-func IsPlayerLeftOfSplitter(node Node) {
+func IsPlayerLeftOfSplitter(playerX float32, playerY float32, node Node, offsetX float32, offsetY float32) bool {
+	partitionLineXRemapped := remapX(node.partitionLineX, offsetX)
+	partitionLineYRemapped := remapY(node.partitionLineY, offsetY)
+	partitionLineDxRemapped := float32(node.dxPartitionLineX)
+	partitionLineDyRemapped := float32(-node.dyPartitionLineY)
 
+	dx := playerX - partitionLineXRemapped
+	dy := playerY - partitionLineYRemapped
+
+	return (dx*partitionLineDyRemapped)-(dy*partitionLineDxRemapped) <= 0
 }
