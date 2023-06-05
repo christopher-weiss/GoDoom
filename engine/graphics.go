@@ -4,16 +4,19 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"image/color"
+	"math"
 )
 
 const (
-	NativeResX    = 320
-	NativeResY    = 200
-	ScaleFactor   = 5
-	ScreenResX    = NativeResX * ScaleFactor
-	ScreenRexY    = NativeResY * ScaleFactor
-	ScreenCenterX = ScreenResX / 2
-	ScreenCenterY = ScreenRexY / 2
+	NativeResX      = 320
+	NativeResY      = 200
+	ScaleFactor     = 5
+	ScreenResX      = NativeResX * ScaleFactor
+	ScreenRexY      = NativeResY * ScaleFactor
+	ScreenCenterX   = ScreenResX / 2
+	ScreenCenterY   = ScreenRexY / 2
+	FieldOfView     = 90
+	HalfFieldOfView = FieldOfView / 2
 )
 
 var DrawBoundingBoxesInMap bool = false
@@ -27,6 +30,28 @@ func DrawMap(screen *ebiten.Image, currentMap *Map) {
 	drawLineDefs(screen, &currentMap.Linedefs, &currentMap.Vertexes)
 	drawNodeBoundingBoxes(screen, &currentMap.Nodes) //TODO remove once debug no longer necessary
 	drawBspTraversal(screen, currentMap)             //TODO remove once debug no longer necessary
+	drawFov(screen)
+}
+
+func drawFov(screen *ebiten.Image) {
+	fovLen := float64(100)
+	sinAlpha := math.Sin(degToRad(PlayerAngle - float64(HalfFieldOfView)))
+	cosAlpha := math.Cos(degToRad(PlayerAngle - float64(HalfFieldOfView)))
+	sinBeta := math.Sin(degToRad(PlayerAngle + float64(HalfFieldOfView)))
+	cosBeta := math.Cos(degToRad(PlayerAngle + float64(HalfFieldOfView)))
+
+	playerX := float64(800)
+	playerY := float64(500)
+	x1 := float32(playerX + fovLen*sinAlpha)
+	y1 := float32(playerY + fovLen*cosAlpha)
+	x2 := float32(playerX + fovLen*sinBeta)
+	y2 := float32(playerY + fovLen*cosBeta)
+	vector.StrokeLine(screen, float32(playerX), float32(playerY), x1, y1, 1, color.RGBA{R: 128, G: 128, A: 128}, true)
+	vector.StrokeLine(screen, float32(playerX), float32(playerY), x2, y2, 1, color.RGBA{R: 128, G: 128, A: 128}, true)
+}
+
+func degToRad(angle float64) float64 {
+	return angle * (math.Pi / 180)
 }
 
 func drawBspTraversal(screen *ebiten.Image, currentMap *Map) {

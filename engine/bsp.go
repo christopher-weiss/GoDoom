@@ -2,7 +2,6 @@ package engine
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"time"
 )
 
 // Node see: https://doom.fandom.com/wiki/Node
@@ -51,9 +50,11 @@ func Traverse(nodeId int16, currentMap *Map, x float32, y float32, screen *ebite
 	if nodeId < 0 {
 		subSectorId := uint16(nodeId) - uint16(0x8000)
 		subSector := currentMap.SubSectors[subSectorId]
+		//if DrawBoundingBoxesInMap {
 		DrawSubSector(screen, subSector, currentMap.Segs, currentMap.Vertexes, depthColor)
-		depthColor++
-		time.Sleep(500 * time.Microsecond)
+		//depthColor++
+		//time.Sleep(500 * time.Microsecond)
+		//}
 		return
 	}
 

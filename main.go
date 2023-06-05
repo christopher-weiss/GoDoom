@@ -76,17 +76,24 @@ func (g *Game) Update() error {
 		engine.PlayerOffsetX = 0
 		engine.PlayerOffsetY = 0
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		engine.PlayerOffsetY = engine.PlayerOffsetY - float32(5)
+	if ebiten.IsKeyPressed(ebiten.KeyW) {
+		engine.PlayerOffsetY = engine.PlayerOffsetY - float32(1)
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		engine.PlayerOffsetY = engine.PlayerOffsetY + float32(5)
+	if ebiten.IsKeyPressed(ebiten.KeyS) {
+		engine.PlayerOffsetY = engine.PlayerOffsetY + float32(1)
 	}
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
+		engine.PlayerOffsetX = engine.PlayerOffsetX + float32(1)
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyD) {
+		engine.PlayerOffsetX = engine.PlayerOffsetX - float32(1)
+	}
+
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		engine.PlayerOffsetX = engine.PlayerOffsetX + float32(5)
+		engine.PlayerAngle = engine.PlayerAngle + float64(5)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		engine.PlayerOffsetX = engine.PlayerOffsetX - float32(5)
+		engine.PlayerAngle = engine.PlayerAngle - float64(5)
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyB) {
