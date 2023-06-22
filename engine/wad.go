@@ -53,7 +53,6 @@ type Directory struct {
 }
 
 type Map struct {
-	// Map Name
 	Name       string
 	Things     []Thing
 	Linedefs   []Linedef
@@ -283,4 +282,19 @@ func readString(data []byte) (ret string) {
 
 func isDebugModeEnabled() bool {
 	return len(os.Args) > 1 && os.Args[1] == "debug"
+}
+
+// ConvertToBoundingBox converts data given as a 64-bit integer from the WAD file to the BoundingBox data structure.
+func ConvertToBoundingBox(data int64) BoundingBox {
+	boundingBoxRight := remapX(int16((data >> 48) & 0xffff))
+	boundingBoxLeft := remapX(int16((data >> 32) & 0xffff))
+	boundingBoxBottom := remapY(int16((data >> 16) & 0xffff))
+	boundingBoxTop := remapY(int16(data & 0xffff))
+
+	return BoundingBox{
+		right:  boundingBoxRight,
+		left:   boundingBoxLeft,
+		bottom: boundingBoxBottom,
+		top:    boundingBoxTop,
+	}
 }

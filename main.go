@@ -5,6 +5,7 @@ import (
 	"github.com/christopher-weiss/GoDoom/engine"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
+	"math"
 )
 
 type Game struct{}
@@ -36,6 +37,13 @@ func initializeGame() {
 }
 
 func (g *Game) Update() error {
+	sinA := math.Sin(engine.DegToRad(engine.PlayerAngle))
+	cosA := math.Cos(engine.DegToRad(engine.PlayerAngle))
+	speedSin := engine.PlayerMovementSpeed * sinA
+	speedCos := engine.PlayerMovementSpeed * cosA
+	dx := 0.0
+	dy := 0.0
+
 	if ebiten.IsKeyPressed(ebiten.Key1) {
 		currentMap = mapData["E1M1"]
 		engine.PlayerOffsetX = 0
@@ -77,28 +85,42 @@ func (g *Game) Update() error {
 		engine.PlayerOffsetY = 0
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
-		engine.PlayerOffsetY = engine.PlayerOffsetY - float32(1)
+		dx += -speedSin
+		dy += speedCos
+
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
-		engine.PlayerOffsetY = engine.PlayerOffsetY + float32(1)
+		dx += speedSin
+		dy += -speedCos
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		engine.PlayerOffsetX = engine.PlayerOffsetX + float32(1)
+		dx += -speedCos
+		dy += -speedSin
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyD) {
-		engine.PlayerOffsetX = engine.PlayerOffsetX - float32(1)
+		dx += speedCos
+		dy += speedSin
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		engine.PlayerAngle = engine.PlayerAngle + float64(5)
+		engine.PlayerAngle += engine.PlayerRotationSpeed
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		engine.PlayerAngle = engine.PlayerAngle - float64(5)
+		engine.PlayerAngle -= engine.PlayerRotationSpeed
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyB) {
 		engine.DrawBoundingBoxesInMap = !engine.DrawBoundingBoxesInMap
 	}
+
+	// speed correction for both x and y movement
+	if dx != 0 && dy != 0 {
+		dx *= 1 / math.Sqrt(2)
+		dy *= 1 / math.Sqrt(2)
+	}
+	engine.PlayerOffsetX += float32(dx)
+	engine.PlayerOffsetY += float32(dy)
+
 	return nil
 }
 

@@ -35,10 +35,10 @@ func DrawMap(screen *ebiten.Image, currentMap *Map) {
 
 func drawFov(screen *ebiten.Image) {
 	fovLen := float64(100)
-	sinAlpha := math.Sin(degToRad(PlayerAngle - float64(HalfFieldOfView)))
-	cosAlpha := math.Cos(degToRad(PlayerAngle - float64(HalfFieldOfView)))
-	sinBeta := math.Sin(degToRad(PlayerAngle + float64(HalfFieldOfView)))
-	cosBeta := math.Cos(degToRad(PlayerAngle + float64(HalfFieldOfView)))
+	sinAlpha := math.Sin(DegToRad(PlayerAngle - float64(HalfFieldOfView)))
+	cosAlpha := math.Cos(DegToRad(PlayerAngle - float64(HalfFieldOfView)))
+	sinBeta := math.Sin(DegToRad(PlayerAngle + float64(HalfFieldOfView)))
+	cosBeta := math.Cos(DegToRad(PlayerAngle + float64(HalfFieldOfView)))
 
 	playerX := float64(800)
 	playerY := float64(500)
@@ -50,8 +50,12 @@ func drawFov(screen *ebiten.Image) {
 	vector.StrokeLine(screen, float32(playerX), float32(playerY), x2, y2, 1, color.RGBA{R: 128, G: 128, A: 128}, true)
 }
 
-func degToRad(angle float64) float64 {
+func DegToRad(angle float64) float64 {
 	return angle * (math.Pi / 180)
+}
+
+func RadToDeg(angle float64) float64 {
+	return angle * (180 / math.Pi)
 }
 
 func drawBspTraversal(screen *ebiten.Image, currentMap *Map) {
@@ -94,13 +98,9 @@ func drawBoundingBoxes(screen *ebiten.Image, node Node) {
 	drawBoundingBox(screen, node.rightBoundingBox, color.RGBA{R: 128, A: 128})
 }
 
-func drawBoundingBox(screen *ebiten.Image, boundingBox int64, color color.RGBA) {
-	boundingBoxRight := remapX(int16((boundingBox >> 48) & 0xffff))
-	boundingBoxLeft := remapX(int16((boundingBox >> 32) & 0xffff))
-	boundingBoxBottom := remapY(int16((boundingBox >> 16) & 0xffff))
-	boundingBoxTop := remapY(int16(boundingBox & 0xffff))
-	vector.StrokeRect(screen, boundingBoxLeft, boundingBoxBottom, boundingBoxRight-boundingBoxLeft, boundingBoxTop-boundingBoxBottom, 1.0, color, true)
-
+func drawBoundingBox(screen *ebiten.Image, data int64, color color.RGBA) {
+	boundingBox := ConvertToBoundingBox(data)
+	vector.StrokeRect(screen, boundingBox.left, boundingBox.bottom, boundingBox.right-boundingBox.left, boundingBox.top-boundingBox.bottom, 1.0, color, true)
 }
 
 func DrawSubSector(screen *ebiten.Image, subSector SubSector, segs []Seg, vertexes []Vertex, depthColor uint8) {
