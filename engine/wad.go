@@ -2,6 +2,7 @@ package engine
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/binary"
 	"fmt"
 	"os"
@@ -96,8 +97,8 @@ func LoadWadFile(path string) {
 	// Header
 	wadHeader = WadHeader{
 		string(wad[0:4]),
-		readInt32(wad[4:8]),
-		readInt32(wad[8:12]),
+		readInt[int32](wad[4:8]),
+		readInt[int32](wad[8:12]),
 	}
 
 	// Directories
@@ -105,7 +106,7 @@ func LoadWadFile(path string) {
 	i := 0
 	for index+DirectoryBlockSize < int32(len(wad)) {
 		name := string(bytes.Trim(wad[index+8:index+16], "\x00")) // trim null-terminated strings
-		directories[name] = Directory{filepos: readInt32(wad[index : index+4]), size: readInt32(wad[index+4 : index+8]), name: name}
+		directories[name] = Directory{filepos: readInt[int32](wad[index : index+4]), size: readInt[int32](wad[index+4 : index+8]), name: name}
 		directoryIndex[name] = i
 		directory[i] = directories[name]
 		i++
@@ -144,11 +145,11 @@ func ReadMapData(mapName string) Map {
 	var things []Thing
 	for entryOffset := int32(0); entryOffset < thingsDirectory.size; entryOffset += ThingsBlockSize {
 		things = append(things, Thing{
-			XPosition: readInt16(thingsLumpData[0+entryOffset : 2+entryOffset]),
-			YPosition: readInt16(thingsLumpData[2+entryOffset : 4+entryOffset]),
-			Direction: readInt16(thingsLumpData[4+entryOffset : 6+entryOffset]),
-			ThingType: readInt16(thingsLumpData[6+entryOffset : 8+entryOffset]),
-			Flags:     readInt16(thingsLumpData[8+entryOffset : 10+entryOffset]),
+			XPosition: readInt[int16](thingsLumpData[0+entryOffset : 2+entryOffset]),
+			YPosition: readInt[int16](thingsLumpData[2+entryOffset : 4+entryOffset]),
+			Direction: readInt[int16](thingsLumpData[4+entryOffset : 6+entryOffset]),
+			ThingType: readInt[int16](thingsLumpData[6+entryOffset : 8+entryOffset]),
+			Flags:     readInt[int16](thingsLumpData[8+entryOffset : 10+entryOffset]),
 		})
 	}
 
@@ -158,13 +159,13 @@ func ReadMapData(mapName string) Map {
 	var linedefs []Linedef
 	for entryOffset := int32(0); entryOffset < linedefsDirectory.size; entryOffset += LinedefsBlockSize {
 		linedefs = append(linedefs, Linedef{
-			StartVertex:  readInt16(linedefsLumpData[0+entryOffset : 2+entryOffset]),
-			EndVertex:    readInt16(linedefsLumpData[2+entryOffset : 4+entryOffset]),
-			Flags:        readInt16(linedefsLumpData[4+entryOffset : 6+entryOffset]),
-			SpecialType:  readInt16(linedefsLumpData[6+entryOffset : 8+entryOffset]),
-			SectorTag:    readInt16(linedefsLumpData[8+entryOffset : 10+entryOffset]),
-			FrontSideDef: readInt16(linedefsLumpData[10+entryOffset : 12+entryOffset]),
-			BackSideDef:  readInt16(linedefsLumpData[12+entryOffset : 14+entryOffset]),
+			StartVertex:  readInt[int16](linedefsLumpData[0+entryOffset : 2+entryOffset]),
+			EndVertex:    readInt[int16](linedefsLumpData[2+entryOffset : 4+entryOffset]),
+			Flags:        readInt[int16](linedefsLumpData[4+entryOffset : 6+entryOffset]),
+			SpecialType:  readInt[int16](linedefsLumpData[6+entryOffset : 8+entryOffset]),
+			SectorTag:    readInt[int16](linedefsLumpData[8+entryOffset : 10+entryOffset]),
+			FrontSideDef: readInt[int16](linedefsLumpData[10+entryOffset : 12+entryOffset]),
+			BackSideDef:  readInt[int16](linedefsLumpData[12+entryOffset : 14+entryOffset]),
 		})
 	}
 
@@ -174,8 +175,8 @@ func ReadMapData(mapName string) Map {
 	var vertexes []Vertex
 	for entryOffset := int32(0); entryOffset < vertexesDirectory.size; entryOffset += VertexesBlockSize {
 		vertexes = append(vertexes, Vertex{
-			XPosition: readInt16(vertexesLumpData[0+entryOffset : 2+entryOffset]),
-			YPosition: readInt16(vertexesLumpData[2+entryOffset : 4+entryOffset]),
+			XPosition: readInt[int16](vertexesLumpData[0+entryOffset : 2+entryOffset]),
+			YPosition: readInt[int16](vertexesLumpData[2+entryOffset : 4+entryOffset]),
 		})
 	}
 
@@ -185,12 +186,12 @@ func ReadMapData(mapName string) Map {
 	segsLumpData := ReadLumpData(segsDirectory)
 	for entryOffset := int32(0); entryOffset < segsDirectory.size; entryOffset += SegsBlockSize {
 		segs = append(segs, Seg{
-			startingVertexNumber: readInt16(segsLumpData[0+entryOffset : 2+entryOffset]),
-			endingVertexNumber:   readInt16(segsLumpData[2+entryOffset : 4+entryOffset]),
-			angle:                readInt16(segsLumpData[4+entryOffset : 6+entryOffset]),
-			lineDefNumber:        readInt16(segsLumpData[6+entryOffset : 8+entryOffset]),
-			direction:            readInt16(segsLumpData[8+entryOffset : 10+entryOffset]),
-			offset:               readInt16(segsLumpData[10+entryOffset : 12+entryOffset]),
+			startingVertexNumber: readInt[int16](segsLumpData[0+entryOffset : 2+entryOffset]),
+			endingVertexNumber:   readInt[int16](segsLumpData[2+entryOffset : 4+entryOffset]),
+			angle:                readInt[int16](segsLumpData[4+entryOffset : 6+entryOffset]),
+			lineDefNumber:        readInt[int16](segsLumpData[6+entryOffset : 8+entryOffset]),
+			direction:            readInt[int16](segsLumpData[8+entryOffset : 10+entryOffset]),
+			offset:               readInt[int16](segsLumpData[10+entryOffset : 12+entryOffset]),
 		})
 	}
 
@@ -200,8 +201,8 @@ func ReadMapData(mapName string) Map {
 	subSectorLumpData := ReadLumpData(subSectorDirectory)
 	for entryOffset := int32(0); entryOffset < subSectorDirectory.size; entryOffset += SubSectorBlockSize {
 		subSectors = append(subSectors, SubSector{
-			segCount:       readInt16(subSectorLumpData[0+entryOffset : 2+entryOffset]),
-			firstSegNumber: readInt16(subSectorLumpData[2+entryOffset : 4+entryOffset]),
+			segCount:       readInt[int16](subSectorLumpData[0+entryOffset : 2+entryOffset]),
+			firstSegNumber: readInt[int16](subSectorLumpData[2+entryOffset : 4+entryOffset]),
 		})
 	}
 
@@ -213,14 +214,14 @@ func ReadMapData(mapName string) Map {
 	for entryOffset := int32(0); entryOffset < nodeDirectory.size; entryOffset += NodeBlockSize {
 		nodes = append(nodes, Node{
 			id:               index,
-			partitionLineX:   readInt16(nodeLumpData[0+entryOffset : 2+entryOffset]),
-			partitionLineY:   readInt16(nodeLumpData[2+entryOffset : 4+entryOffset]),
-			dxPartitionLineX: readInt16(nodeLumpData[4+entryOffset : 6+entryOffset]),
-			dyPartitionLineY: readInt16(nodeLumpData[6+entryOffset : 8+entryOffset]),
-			rightBoundingBox: readInt64(nodeLumpData[8+entryOffset : 16+entryOffset]),
-			leftBoundingBox:  readInt64(nodeLumpData[16+entryOffset : 24+entryOffset]),
-			rightChild:       readInt16(nodeLumpData[24+entryOffset : 26+entryOffset]),
-			leftChild:        readInt16(nodeLumpData[26+entryOffset : 28+entryOffset]),
+			partitionLineX:   readInt[int16](nodeLumpData[0+entryOffset : 2+entryOffset]),
+			partitionLineY:   readInt[int16](nodeLumpData[2+entryOffset : 4+entryOffset]),
+			dxPartitionLineX: readInt[int16](nodeLumpData[4+entryOffset : 6+entryOffset]),
+			dyPartitionLineY: readInt[int16](nodeLumpData[6+entryOffset : 8+entryOffset]),
+			rightBoundingBox: readInt[int64](nodeLumpData[8+entryOffset : 16+entryOffset]),
+			leftBoundingBox:  readInt[int64](nodeLumpData[16+entryOffset : 24+entryOffset]),
+			rightChild:       readInt[int16](nodeLumpData[24+entryOffset : 26+entryOffset]),
+			leftChild:        readInt[int16](nodeLumpData[26+entryOffset : 28+entryOffset]),
 		})
 		index += 1
 	}
@@ -231,13 +232,13 @@ func ReadMapData(mapName string) Map {
 	sectorLumpData := ReadLumpData(sectorDirectory)
 	for entryOffset := int32(0); entryOffset < sectorDirectory.size; entryOffset += SectorBlockSize {
 		sectors = append(sectors, Sector{
-			floorHeight:          readInt16(sectorLumpData[0+entryOffset : 2+entryOffset]),
-			ceilingHeight:        readInt16(sectorLumpData[2+entryOffset : 4+entryOffset]),
+			floorHeight:          readInt[int16](sectorLumpData[0+entryOffset : 2+entryOffset]),
+			ceilingHeight:        readInt[int16](sectorLumpData[2+entryOffset : 4+entryOffset]),
 			nameOfFloorTexture:   readString(sectorLumpData[4+entryOffset : 12+entryOffset]),
 			nameOfCeilingTexture: readString(sectorLumpData[12+entryOffset : 20+entryOffset]),
-			lightLevel:           readInt16(sectorLumpData[20+entryOffset : 22+entryOffset]),
-			sectorType:           readInt16(sectorLumpData[22+entryOffset : 24+entryOffset]),
-			tagNumber:            readInt16(sectorLumpData[24+entryOffset : 26+entryOffset]),
+			lightLevel:           readInt[int16](sectorLumpData[20+entryOffset : 22+entryOffset]),
+			sectorType:           readInt[int16](sectorLumpData[22+entryOffset : 24+entryOffset]),
+			tagNumber:            readInt[int16](sectorLumpData[24+entryOffset : 26+entryOffset]),
 		})
 	}
 
@@ -256,27 +257,23 @@ func ReadLumpData(directory Directory) []byte {
 	return lumpData[directory.filepos : directory.filepos+directory.size]
 }
 
-func readInt16(data []byte) (ret int16) {
+func readInt[T int16 | int32 | int64](data []byte) T {
+	ret := T(0)
 	buf := bytes.NewBuffer(data)
-	binary.Read(buf, binary.LittleEndian, &ret)
-	return
-}
+	err := binary.Read(buf, binary.LittleEndian, &ret)
+	if err != nil {
+		return T(0)
+	}
 
-func readInt32(data []byte) (ret int32) {
-	buf := bytes.NewBuffer(data)
-	binary.Read(buf, binary.LittleEndian, &ret)
-	return
-}
-
-func readInt64(data []byte) (ret int64) {
-	buf := bytes.NewBuffer(data)
-	binary.Read(buf, binary.LittleEndian, &ret)
-	return
+	return ret
 }
 
 func readString(data []byte) (ret string) {
 	buf := bytes.NewBuffer(data)
-	binary.Read(buf, binary.LittleEndian, &ret)
+	err := binary.Read(buf, binary.LittleEndian, &ret)
+	if err != nil {
+		return ""
+	}
 	return
 }
 

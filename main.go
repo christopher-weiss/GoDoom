@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
 	"math"
+	"os"
 )
 
 type Game struct{}
@@ -14,18 +15,23 @@ var mapData = make(map[string]engine.Map)
 var currentMap engine.Map
 
 func main() {
-	initializeGame()
+	if len(os.Args) <= 1 {
+		fmt.Println("Usage: ./GoDoom <path to WAD file>")
+		os.Exit(1)
+	}
+	var wadPath = os.Args[1]
+	initializeGame(wadPath)
 
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func initializeGame() {
+func initializeGame(wadPath string) {
 	ebiten.SetWindowSize(engine.ScreenResX, engine.ScreenRexY)
 	ebiten.SetWindowTitle("Go Doom")
 
-	engine.LoadWadFile("resources/doom1.wad")
+	engine.LoadWadFile(wadPath)
 	startingMap := "E1M1"
 
 	for level := 1; level <= 8; level++ {
